@@ -1,0 +1,36 @@
+# SECRETS - never commit
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+credentials*
+*CREDENTIALS*
+*-credentials*
+secrets.*
+id_rsa*
+*.p12
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node / frontend tooling
+node_modules/
+
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Editors
+.vscode/
+.idea/

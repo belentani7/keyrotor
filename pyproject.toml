@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "keyrotor"
+version = "1.0.0"
+description = "Zero-secret multi-provider LLM key rotation router with failover, TTL cache, circuit breaker and live dashboard."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.9"
+authors = [{ name = "Pedro Belentani" }]
+keywords = ["llm", "router", "key-rotation", "failover", "gateway", "litellm"]
+dependencies = ["requests>=2.28"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4"]
+
+[project.scripts]
+keyrotor = "keyrotor.__main__:main"
+
+[tool.setuptools]
+packages = ["keyrotor"]
+
+[tool.setuptools.package-data]
+keyrotor = ["../frontend/index.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

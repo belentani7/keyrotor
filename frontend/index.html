@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KEYROTOR — LLM Key Rotation Router</title>
+<style>
+  :root {
+    --bg: #0a0e14;
+    --panel: #0e1520;
+    --panel-2: #111a27;
+    --border: #1c2a3a;
+    --cyan: #00e5ff;
+    --green: #00ff9c;
+    --amber: #ffb454;
+    --red: #ff5c7a;
+    --text: #d6e2ef;
+    --muted: #7a8ba3;
+    --mono: "Consolas", "Menlo", "DejaVu Sans Mono", monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+  h1 {
+    font-size: 22px;
+    letter-spacing: 2px;
+    font-weight: 700;
+  }
+  h1 .neon { color: var(--cyan); text-shadow: 0 0 12px rgba(0, 229, 255, .55); }
+  .subtitle { color: var(--muted); font-size: 12px; letter-spacing: 1px; margin-top: 4px; }
+  .hitrate-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 22px;
+    text-align: right;
+  }
+  .hitrate-box .big {
+    font-size: 40px;
+    font-weight: 800;
+    color: var(--green);
+    text-shadow: 0 0 16px rgba(0, 255, 156, .5);
+    font-family: var(--mono);
+    line-height: 1;
+  }
+  .hitrate-box .label {
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .hitrate-box .detail { color: var(--muted); font-size: 11px; font-family: var(--mono); margin-top: 4px; }
+  #conn {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--amber);
+  }
+  #conn.ok { color: var(--green); }
+  #conn.bad { color: var(--red); }
+  .layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
+  @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    transition: border-color .2s;
+  }
+  .card:hover { border-color: #2a4258; }
+  .card h2 {
+    font-size: 15px;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid;
+  }
+  .badge.closed   { color: var(--green); border-color: var(--green); background: rgba(0,255,156,.07); }
+  .badge.open     { color: var(--red);   border-color: var(--red);   background: rgba(255,92,122,.07); }
+  .badge.half_open{ color: var(--amber); border-color: var(--amber); background: rgba(255,180,84,.07); }
+  .keys { font-family: var(--mono); font-size: 11px; color: var(--muted); margin: 8px 0 10px; word-break: break-all; }
+  .keys b { color: var(--cyan); font-weight: 400; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; font-family: var(--mono); font-size: 11px; }
+  .stats div { display: flex; justify-content: space-between; border-bottom: 1px dashed #17222f; padding: 2px 0; }
+  .stats span:last-child { color: var(--text); }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+  .panel h2 { font-size: 13px; letter-spacing: 2px; color: var(--cyan); margin-bottom: 12px; }
+  #events {
+    font-family: var(--mono);
+    font-size: 11px;
+    max-height: 420px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  #events .ev { display: grid; grid-template-columns: 74px 1fr; gap: 6px; padding: 3px 0; border-bottom: 1px solid #121c28; }
+  #events .ts { color: var(--muted); }
+  #events .kind-cache_hit     { color: var(--green); }
+  #events .kind-success       { color: var(--green); }
+  #events .kind-retry         { color: var(--amber); }
+  #events .kind-key_dropped   { color: var(--red); }
+  #events .kind-breaker_open  { color: var(--red); }
+  #events .kind-attempt       { color: var(--cyan); }
+  #events .kind-network_error { color: var(--red); }
+  #events .kind-provider_error{ color: var(--amber); }
+  #events .kind-provider_empty{ color: var(--amber); }
+  #events .kind-skip          { color: var(--muted); }
+  #events .msg { color: var(--text); word-break: break-all; }
+  #events .empty { color: var(--muted); }
+  .chatbox textarea {
+    width: 100%;
+    min-height: 90px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 10px;
+    resize: vertical;
+  }
+  .chatbox textarea:focus, .chatbox select:focus { outline: none; border-color: var(--cyan); }
+  .chat-row { display: flex; gap: 10px; margin-top: 10px; align-items: center; }
+  .chatbox select {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 8px;
+    font-size: 12px;
+    flex: 1;
+  }
+  button {
+    background: linear-gradient(135deg, #00e5ff22, #00ff9c22);
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 1px;
+    padding: 9px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  button:hover { background: rgba(0,229,255,.12); }
+  button:disabled { opacity: .45; cursor: wait; }
+  #chat-result { margin-top: 14px; font-size: 13px; white-space: pre-wrap; word-break: break-word; }
+  #chat-meta { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 8px; }
+  .hit-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--green);
+    border: 1px solid var(--green);
+    padding: 1px 8px;
+    border-radius: 999px;
+    margin-left: 8px;
+  }
+  .err { color: var(--red); }
+  .side { display: flex; flex-direction: column; gap: 20px; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>KEY<span class="neon">ROTOR</span></h1>
+    <div class="subtitle">LLM KEY ROTATION ROUTER — FAILOVER / BREAKER / CACHE</div>
+  </div>
+  <div style="display:flex; gap:16px; align-items:center;">
+    <div class="hitrate-box">
+      <div class="label">cache hit rate</div>
+      <div class="big" id="hitrate">0.0%</div>
+      <div class="detail" id="hitdetail">hits 0 / misses 0 / entries 0</div>
+    </div>
+    <div id="conn">connecting...</div>
+  </div>
+</header>
+
+<div class="layout">
+  <div>
+    <div class="grid" id="providers"></div>
+  </div>
+  <div class="side">
+    <div class="panel">
+      <h2>EVENTS</h2>
+      <div id="events"><span class="empty">waiting for events...</span></div>
+    </div>
+    <div class="panel chatbox">
+      <h2>CHAT TEST</h2>
+      <textarea id="prompt" placeholder="Write a prompt... (responses are served through the router)"></textarea>
+      <div class="chat-row">
+        <select id="model">
+          <option value="">model: auto</option>
+          <option value="gemini-3.6-flash">gemini-3.6-flash</option>
+          <option value="meta/llama-3.1-8b-instruct">meta/llama-3.1-8b-instruct</option>
+          <option value="meta-llama/llama-3.3-70b-instruct:free">meta-llama/llama-3.3-70b-instruct:free</option>
+          <option value="gpt-4o-mini">gpt-4o-mini</option>
+          <option value="test">test</option>
+        </select>
+        <button id="send">SEND</button>
+      </div>
+      <div id="chat-result"></div>
+      <div id="chat-meta"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // Client-side defense in depth: never render key-shaped strings, even if
+  // a provider response echoes one. The server already redacts everything.
+  var MASK_PATTERNS = [
+    [/sk-[A-Za-z0-9]{12,}/g, "sk-****"],
+    [/sk-or-v[0-9]+-[a-f0-9]{20,}/g, "sk-or-****"],
+    [/nvapi-[A-Za-z0-9]{20,}/g, "nvapi-****"],
+    [/AIza[A-Za-z0-9_-]{20,}/g, "AIza****"],
+    [/eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}/g, "[jwt]"],
+    [/github_pat_[A-Za-z0-9_]{10,}/g, "github_pat_****"],
+  ];
+  function maskText(text) {
+    if (!text) return text;
+    var out = String(text);
+    MASK_PATTERNS.forEach(function (rule) { out = out.replace(rule[0], rule[1]); });
+    return out;
+  }
+
+  var $ = function (id) { return document.getElementById(id); };
+  var connEl = $("conn");
+
+  function setConn(state, label) {
+    connEl.className = state;
+    connEl.textContent = label;
+  }
+
+  function el(tag, cls, text) {
+    var node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+
+  function renderProviders(providers) {
+    var grid = $("providers");
+    grid.innerHTML = "";
+    if (!providers || !providers.length) {
+      grid.appendChild(el("div", "card", "no providers registered"));
+      return;
+    }
+    providers.forEach(function (p) {
+      var card = el("div", "card");
+      var title = el("h2");
+      title.appendChild(document.createTextNode(p.provider));
+      var badge = el("span", "badge " + p.breaker, p.breaker.toUpperCase());
+      title.appendChild(badge);
+      card.appendChild(title);
+
+      var keys = el("div", "keys");
+      keys.appendChild(document.createTextNode("keys (" + p.keys_active + "): "));
+      var b = el("b");
+      b.textContent = (p.keys_masked && p.keys_masked.length)
+        ? p.keys_masked.join(", ") : "(none)";
+      keys.appendChild(b);
+      card.appendChild(keys);
+
+      var stats = el("div", "stats");
+      [["requests", p.requests], ["successes", p.successes],
+       ["failures", p.failures], ["keys dropped", p.keys_dropped],
+       ["cache hits", p.cache_hits],
+       ["breaker fails", p.breaker_failures]].forEach(function (row) {
+        var line = el("div");
+        line.appendChild(el("span", null, row[0]));
+        line.appendChild(el("span", null, String(row[1])));
+        stats.appendChild(line);
+      });
+      card.appendChild(stats);
+      grid.appendChild(card);
+    });
+  }
+
+  function renderEvents(events) {
+    var box = $("events");
+    box.innerHTML = "";
+    if (!events || !events.length) {
+      box.appendChild(el("span", "empty", "no events yet"));
+      return;
+    }
+    var newestFirst = events.slice().reverse();
+    newestFirst.forEach(function (ev) {
+      var row = el("div", "ev");
+      var ts = new Date(ev.ts * 1000);
+      var hh = String(ts.getHours()).padStart(2, "0");
+      var mm = String(ts.getMinutes()).padStart(2, "0");
+      var ss = String(ts.getSeconds()).padStart(2, "0");
+      row.appendChild(el("span", "ts", hh + ":" + mm + ":" + ss));
+      var msg = el("span", "msg kind-" + ev.event,
+                   "[" + ev.event + "] " + ev.provider + " " + maskText(ev.message));
+      row.appendChild(msg);
+      box.appendChild(row);
+    });
+  }
+
+  function poll() {
+    fetch("/api/status")
+      .then(function (res) {
+        if (!res.ok) throw new Error("status " + res.status);
+        return res.json();
+      })
+      .then(function (data) {
+        setConn("ok", "live");
+        var rate = (data.cache.hit_rate * 100);
+        $("hitrate").textContent = rate.toFixed(1) + "%";
+        $("hitdetail").textContent =
+          "hits " + data.cache.hits + " / misses " + data.cache.misses +
+          " / entries " + data.cache.size;
+        renderProviders(data.providers);
+        renderEvents(data.events);
+      })
+      .catch(function (err) {
+        setConn("bad", "offline: " + maskText(err.message || err));
+      });
+  }
+
+  function sendChat() {
+    var prompt = $("prompt").value.trim();
+    if (!prompt) return;
+    var btn = $("send");
+    btn.disabled = true;
+    $("chat-result").textContent = "";
+    $("chat-meta").textContent = "sending...";
+    var body = {
+      model: $("model").value || undefined,
+      messages: [{ role: "user", content: prompt }]
+    };
+    fetch("/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    })
+      .then(function (res) { return res.json().then(function (j) {
+        return { status: res.status, data: j }; }); })
+      .then(function (pack) {
+        btn.disabled = false;
+        if (pack.status === 200) {
+          var choice = pack.data.choices && pack.data.choices[0];
+          var content = choice && choice.message ? choice.message.content : "";
+          var result = $("chat-result");
+          result.textContent = maskText(content);
+          result.classList.remove("err");
+          var meta = "provider: " + maskText(pack.data.provider) +
+                     " | model: " + maskText(pack.data.model);
+          var metaEl = $("chat-meta");
+          metaEl.textContent = meta;
+          if (pack.data.cache_hit) {
+            metaEl.appendChild(el("span", "hit-tag", "CACHE HIT"));
+          }
+        } else {
+          var errEl = $("chat-result");
+          errEl.textContent = maskText(
+            (pack.data && pack.data.error &&
+             (pack.data.error.message || pack.data.error)) ||
+            "request failed");
+          errEl.classList.add("err");
+          $("chat-meta").textContent = "http " + pack.status;
+        }
+      })
+      .catch(function (err) {
+        btn.disabled = false;
+        var errEl = $("chat-result");
+        errEl.textContent = maskText(err.message || String(err));
+        errEl.classList.add("err");
+        $("chat-meta").textContent = "";
+      });
+  }
+
+  $("send").addEventListener("click", sendChat);
+  $("prompt").addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) sendChat();
+  });
+
+  poll();
+  setInterval(poll, 3000);
+})();
+</script>
+</body>
+</html>
