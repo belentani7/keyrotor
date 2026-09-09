@@ -1,0 +1,11 @@
+# Vercel deploys only the static landing page in frontend/.
+# Excluding the Python package stops zero-config Python builder detection,
+# which otherwise fails with "No python entrypoint found".
+pyproject.toml
+keyrotor/
+scripts/
+tests/
+deployed/
+.pytest_cache/
+__pycache__/
+*.py
