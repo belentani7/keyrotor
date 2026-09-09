@@ -34,3 +34,5 @@ desktop.ini
 # Editors
 .vscode/
 .idea/
+
+.vercel
