@@ -167,6 +167,27 @@ python scripts/secret_scan.py
 Los tests del router usan un transport falso (sin red) y claves de juguete
 (`sk-fake-...`); ninguno toca la red ni usa claves reales.
 
+## Datos abiertos
+
+El directorio [`open-data/`](open-data/) trae un pack abierto del catalogo de
+modelos LLM (id, contexto, precio por millon de tokens, modalidad), obtenido
+del endpoint publico de OpenRouter **sin clave de API**.
+
+```bash
+python scripts/fetch_open_data.py   # regenera open-data/llm-models.{json,csv}
+```
+
+Ver [`open-data/README.md`](open-data/README.md) para fuente y licencia.
+
+## Proyectos open similares
+
+- [LiteLLM](https://github.com/BerriAI/litellm) — proxy/gateway multi-proveedor con rotacion y presupuestos.
+- [Portkey AI Gateway](https://github.com/Portkey-AI/gateway) — gateway con failover, cache y guardrails.
+- [Bifrost](https://github.com/maximhq/bifrost) — gateway LLM de alto rendimiento en Go.
+- [Helicone](https://github.com/Helicone/helicone) — observabilidad y caching para LLM.
+- [RouteLLM](https://github.com/lm-sys/RouteLLM) — enrutado inteligente coste/calidad.
+- [GPTRouter](https://github.com/Writesonic/GPTRouter) — router con fallback entre proveedores.
+
 ## Licencia
 
 MIT — Copyright (c) 2026 Pedro Belentani. Ver [LICENSE](LICENSE).
