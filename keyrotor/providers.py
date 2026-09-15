@@ -6,6 +6,7 @@ policy and how to build its payload from an OpenAI-style request.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional
 
@@ -66,11 +67,18 @@ def _chat_url(base: str, model: str) -> str:
     return base
 
 
+def _env_model(var: str, default: str) -> str:
+    """Default model, overridable per provider from the environment."""
+    return os.environ.get(var) or default
+
+
 BUILTIN_PROVIDERS: Dict[str, Provider] = {
     "openrouter": Provider(
         name="openrouter",
         base_url="https://openrouter.ai/api/v1/chat/completions",
-        default_model="meta-llama/llama-3.3-70b-instruct:free",
+        default_model=_env_model(
+            "OPENROUTER_MODEL", "meta-llama/llama-3.3-70b-instruct:free"
+        ),
         timeout=30.0,
         max_retries=3,
         backoff_factor=1.0,
@@ -79,7 +87,9 @@ BUILTIN_PROVIDERS: Dict[str, Provider] = {
     "nvidia": Provider(
         name="nvidia",
         base_url="https://integrate.api.nvidia.com/v1/chat/completions",
-        default_model="meta/llama-3.1-8b-instruct",
+        default_model=_env_model(
+            "NVIDIA_MODEL", "nvidia/nemotron-3-super-120b-a12b"
+        ),
         timeout=30.0,
         max_retries=2,
         cache_ttl=300.0,
@@ -90,7 +100,7 @@ BUILTIN_PROVIDERS: Dict[str, Provider] = {
         "{model}:generateContent",
         auth_type="query",
         auth_param="key",
-        default_model="gemini-3.6-flash",
+        default_model=_env_model("GOOGLE_MODEL", "gemini-3.6-flash"),
         timeout=20.0,
         max_retries=2,
         cache_ttl=600.0,
@@ -98,8 +108,10 @@ BUILTIN_PROVIDERS: Dict[str, Provider] = {
     ),
     "opencode": Provider(
         name="opencode",
-        base_url="https://api.opencode.ai/v1/chat/completions",
-        default_model="gpt-4o-mini",
+        base_url=_env_model(
+            "OPENCODE_BASE_URL", "https://opencode.ai/zen/v1/chat/completions"
+        ),
+        default_model=_env_model("OPENCODE_MODEL", "deepseek-v4-flash-free"),
         timeout=25.0,
         max_retries=2,
         cache_ttl=300.0,
