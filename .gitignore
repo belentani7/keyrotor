@@ -36,3 +36,5 @@ desktop.ini
 .idea/
 
 .vercel
+
+# deploy trigger 2026-09-20 (permite a Vercel construir produccion)
