@@ -22,6 +22,7 @@ stacks can run the full router without network access.
 
 from __future__ import annotations
 
+import os
 import random
 import threading
 import time
@@ -128,6 +129,16 @@ class RotatingRouter:
         self.cache_ttl = cache_ttl
         self.max_retries = max_retries
         self.backoff_factor = backoff_factor
+        # catálogo de modelos por gateway (perezoso, TTL 10 min) + errores por
+        # proveedor de la última ronda de failover (para errores explicativos)
+        self._catalogs: Dict[str, Optional[set]] = {}
+        self._catalog_ts: Dict[str, float] = {}
+        self.last_errors: List[Dict[str, Any]] = []
+        # El salto por catálogo solo en producción (tests usan modelos falsos
+        # que no existen en catálogos reales): KEYROTOR_CATALOG_SKIP=1
+        self.catalog_skip = os.environ.get("KEYROTOR_CATALOG_SKIP", "0").strip().lower() in (
+            "1", "true", "yes",
+        )
 
     # ---------------------------------------------------------- keys
     def _get_key(self, provider: str) -> Optional[str]:
@@ -187,6 +198,7 @@ class RotatingRouter:
         url: str,
         headers: Dict[str, str],
         body: Dict[str, Any],
+        last_status_holder: Optional[Dict[str, int]] = None,
     ) -> Optional[FakeResponse]:
         cfg_retries = self.max_retries if self.max_retries is not None else provider.max_retries
         factor = self.backoff_factor if self.backoff_factor is not None else provider.backoff_factor
@@ -216,8 +228,60 @@ class RotatingRouter:
                 time.sleep(wait)
                 continue
             if response.status_code >= 400:
+                if last_status_holder is not None:
+                    last_status_holder["status"] = response.status_code
                 return response  # 4xx client error: give up on this key
             return response
+        return None
+
+    # ------------------------------------------------------- catalog
+    def _catalog_match(
+        self, provider_name: str, provider: Provider, model: str
+    ) -> Optional[str]:
+        """Resuelve `model` contra el catálogo del gateway.
+        '' = sin información (intentar tal cual), None = no servido (skip),
+        str = id del catálogo a usar (posible alias con prefijo)."""
+        if not provider.catalog_url or not self.catalog_skip:
+            return ""
+        now = time.time()
+        ts = self._catalog_ts.get(provider_name, 0.0)
+        if provider_name in self._catalogs and now - ts < 600.0:
+            catalog = self._catalogs[provider_name]
+        else:
+            catalog: Optional[set] = None
+            try:
+                import requests  # solo para el sondeo de catálogo
+
+                key = self._get_key(provider_name) or ""
+                headers = self._auth_headers(provider, key, {
+                    "Accept": "application/json",
+                    # Groq/Cloudflare rechazan UA de python-requests con 403
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+                })
+                r = requests.get(
+                    provider.catalog_url, headers=headers, timeout=12.0,
+                    proxies={"http": None, "https": None},
+                )
+                if r.status_code == 200:
+                    data = r.json().get("data", [])
+                    catalog = {m.get("id", "") for m in data if isinstance(m, dict)}
+            except Exception as exc:
+                self._log("catalog_error", provider_name, str(exc)[:120])
+            self._catalogs[provider_name] = catalog
+            self._catalog_ts[provider_name] = now
+        if catalog is None:
+            return ""  # catálogo desconocido: intentar igualmente
+        if model in catalog:
+            return model
+        # coincidencia por sufijo: el usuario pide "deepseek-chat" y el
+        # gateway lista "deepseek/deepseek-chat" -> reescribir al id completo
+        for c in catalog:
+            if c.endswith("/" + model):
+                return c
+        self._log(
+            "model_not_served", provider_name,
+            f"el gateway no sirve '{model}' (catalogo: {len(catalog)} modelos)",
+        )
         return None
 
     def chat(
@@ -236,6 +300,8 @@ class RotatingRouter:
         order = provider_order or self.provider_order
         headers = {"Content-Type": "application/json"}
         attempts = 0
+        requested_model = model or ""
+        self.last_errors = []
 
         for provider_name in order:
             provider = self.providers.get(provider_name)
@@ -247,6 +313,25 @@ class RotatingRouter:
 
             url = resolve_url(provider, request)
             body = provider.payload(request)
+            effective_model = body.get("model") or requested_model
+
+            # resolucion por catalogo: saltar gateways que no sirven el
+            # modelo y reescribir al id completo que el gateway espera
+            if self.catalog_skip and requested_model:
+                matched = self._catalog_match(
+                    provider_name, provider, effective_model
+                )
+                if matched is None:
+                    self.last_errors.append({
+                        "provider": provider_name,
+                        "status": 0,
+                        "detail": f"no sirve el modelo {effective_model}",
+                    })
+                    continue
+                if matched and matched != effective_model:
+                    self._log("model_alias", provider_name,
+                              f"{effective_model} -> {matched}")
+                    body["model"] = matched
             ttl = cache_ttl if cache_ttl is not None else (
                 self.cache_ttl if self.cache_ttl is not None else provider.cache_ttl
             )
@@ -289,9 +374,24 @@ class RotatingRouter:
 
                 if response is None:
                     # network exhausted retries: keep key, failover provider
+                    self.last_errors.append({
+                        "provider": provider_name, "status": 0,
+                        "detail": "sin respuesta (red/timeout)",
+                    })
                     with self._lock:
                         stats.failures += 1
                     stats.breaker.record_failure()
+                    break
+
+                if response.status_code == 402:
+                    # Payment required: gateway con modelo de pago sin saldo.
+                    # NO matar la key (es valida), failover al siguiente.
+                    self.last_errors.append({
+                        "provider": provider_name, "status": 402,
+                        "detail": "modelo de pago sin saldo en este gateway",
+                    })
+                    self._log("insufficient_funds", provider_name,
+                              "402: sin saldo, failover conservando la key")
                     break
 
                 if response.status_code in _KEY_KILLERS:
@@ -304,6 +404,11 @@ class RotatingRouter:
 
                 if response.status_code >= 400:
                     # client/config error: provider is reachable
+                    self.last_errors.append({
+                        "provider": provider_name,
+                        "status": response.status_code,
+                        "detail": self.redactor.clean(response.text)[:200],
+                    })
                     with self._lock:
                         stats.failures += 1
                     self._log("provider_error", provider_name,
@@ -327,9 +432,12 @@ class RotatingRouter:
                     data=data, attempts=attempts,
                 )
 
+        detail = "; ".join(
+            f"{e['provider']}: {e['detail']}" for e in self.last_errors
+        ) or "sin detalle"
         return RouterResult(
             ok=False,
-            error="all providers failed or exhausted",
+            error=f"all providers failed or exhausted [{detail}]",
             attempts=attempts,
         )
 

@@ -24,6 +24,7 @@ class Provider:
     backoff_factor: float = 0.5
     cache_ttl: float = 300.0           # 0 = no cache
     default_model: str = ""
+    catalog_url: str = ""              # GET /models endpoint ("" = unknown)
     build_payload: Optional[PayloadBuilder] = None  # custom body builder
 
     def payload(self, request: Dict[str, Any]) -> Dict[str, Any]:
@@ -116,7 +117,68 @@ BUILTIN_PROVIDERS: Dict[str, Provider] = {
         max_retries=2,
         cache_ttl=300.0,
     ),
+    # --- Gateways free-friendly (2026-09) ---
+    # Groq: TPM POR MODELO; compound-mini es el unico con 70K TPM capaz de
+    # tragarse el system prompt de un agente CLI sin 413.
+    "groq": Provider(
+        name="groq",
+        base_url="https://api.groq.com/openai/v1/chat/completions",
+        default_model=_env_model("GROQ_MODEL", "groq/compound-mini"),
+        timeout=25.0,
+        max_retries=2,
+        cache_ttl=300.0,
+    ),
+    "cerebras": Provider(
+        name="cerebras",
+        base_url="https://api.cerebras.ai/v1/chat/completions",
+        default_model=_env_model("CEREBRAS_MODEL", "gpt-oss-120b"),
+        timeout=25.0,
+        max_retries=2,
+        cache_ttl=300.0,
+    ),
+    "mistral": Provider(
+        name="mistral",
+        base_url="https://api.mistral.ai/v1/chat/completions",
+        default_model=_env_model("MISTRAL_MODEL", "mistral-small-latest"),
+        timeout=25.0,
+        max_retries=2,
+        cache_ttl=300.0,
+    ),
+    "deepseek": Provider(
+        name="deepseek",
+        base_url="https://api.deepseek.com/chat/completions",
+        default_model=_env_model("DEEPSEEK_MODEL", "deepseek-chat"),
+        timeout=40.0,
+        max_retries=2,
+        cache_ttl=300.0,
+    ),
+    "huggingface": Provider(
+        name="huggingface",
+        base_url="https://router.huggingface.co/v1/chat/completions",
+        default_model=_env_model(
+            "HUGGINGFACE_MODEL", "meta-llama/Llama-3.3-70B-Instruct"
+        ),
+        timeout=40.0,
+        max_retries=2,
+        cache_ttl=0.0,
+    ),
 }
+
+# Endpoints GET /models para saber QUÉ modelos sirve cada gateway antes de
+# gastar cuota: si el modelo pedido no está en el catálogo, se salta el
+# proveedor sin hacer ninguna llamada de chat.
+_CATALOG_URLS = {
+    "openrouter": "https://openrouter.ai/api/v1/models",
+    "nvidia": "https://integrate.api.nvidia.com/v1/models",
+    "google": "https://generativelanguage.googleapis.com/v1beta/models",
+    "groq": "https://api.groq.com/openai/v1/models",
+    "cerebras": "https://api.cerebras.ai/v1/models",
+    "mistral": "https://api.mistral.ai/v1/models",
+    "deepseek": "https://api.deepseek.com/models",
+    "huggingface": "https://router.huggingface.co/v1/models",
+}
+for _p in BUILTIN_PROVIDERS.values():
+    _p.catalog_url = _CATALOG_URLS.get(_p.name, "")
 
 
 def resolve_url(provider: Provider, request: Dict[str, Any]) -> str:

@@ -157,6 +157,10 @@ def _make_handler(router: RotatingRouter) -> Type[BaseHTTPRequestHandler]:
                 return
 
             model = body.get("model")
+            # "auto"/empty: let each provider use its own default model, so
+            # cross-provider failover works with a single client model id.
+            if not model or str(model).lower() in ("auto", "router", "keyrotor"):
+                model = None
             request_kwargs = {k: body[k] for k in _FORWARDABLE if k in body}
 
             result = router.chat(messages, model=model, **request_kwargs)
