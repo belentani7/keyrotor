@@ -58,9 +58,11 @@ enmascaradas (`sk-a...1234`).
 pip install -e .
 
 # 2. configurar claves (nunca commitear .env)
-copy .env.example .env      # Windows
+copy .env.example .env      # Windows; referencia local, NO se carga automáticamente
 # cp .env.example .env      # Linux/macOS
-# rellena .env con tus claves reales
+# Exporta las variables que usarás en el proceso (no basta con copiar .env)
+# Linux/macOS: export OPENROUTER_API_KEYS='tu-clave'
+# PowerShell:  $env:OPENROUTER_API_KEYS='tu-clave'
 
 # 3. arrancar servidor + dashboard
 python -m keyrotor serve --host 127.0.0.1 --port 8000
@@ -149,6 +151,8 @@ En caso de fallo total devuelve `502` con `{"error": {...}}` (texto redactado).
 
 ## Seguridad
 
+- **Local por defecto**: el servidor HTTP solo admite binding en loopback (`localhost`, `127.0.0.1` o `::1`). Para exponer una API pública es imprescindible diseñar primero autenticación, autorización, HTTPS, límites de uso y un gateway; esta versión no se debe abrir en `0.0.0.0`.
+- **CORS restringido**: se rechazan las solicitudes con `Origin` cruzado; ya no se envía `Access-Control-Allow-Origin: *`. Clientes CLI sin `Origin` continúan funcionando localmente.
 - Las claves solo existen en memoria, leídas de variables de entorno.
 - `keyrotor.redact` enmascara (`sk-a****34`) y detecta patrones de claves
   (OpenAI, OpenRouter, NVIDIA, Google, JWT, GitHub PAT, HF, AWS...).
@@ -161,6 +165,7 @@ En caso de fallo total devuelve `502` con `{"error": {...}}` (texto redactado).
 
 ```bash
 python -m pytest tests -q
+python -m keyrotor status  # prueba el arranque de la CLI y el cargador de secretos
 python scripts/secret_scan.py
 ```
 
