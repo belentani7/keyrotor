@@ -27,3 +27,7 @@ jobs:
         run: python -m compileall -q .
       - name: Tests
         run: pytest -q
+      - name: CLI import and entrypoint smoke
+        run: python -m keyrotor status
+      - name: Secrets scan
+        run: python scripts/secret_scan.py
