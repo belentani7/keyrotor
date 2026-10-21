@@ -22,6 +22,8 @@ from __future__ import annotations
 import json
 import os
 import uuid
+import ipaddress
+from urllib.parse import urlsplit
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, Dict, List, Optional, Tuple, Type
 
@@ -56,8 +58,24 @@ def _make_handler(router: RotatingRouter) -> Type[BaseHTTPRequestHandler]:
         server_version = "Keyrotor/" + VERSION
 
         # ------------------------------------------------- CORS / plumbing
+        def _allowed_origin(self) -> bool:
+            origin = self.headers.get("Origin")
+            if not origin:
+                return True  # CLI/server-to-server requests have no Origin header
+            try:
+                parsed = urlsplit(origin)
+                return (parsed.scheme == "http"
+                        and parsed.hostname in {"localhost", "127.0.0.1", "::1"}
+                        and parsed.port == self.server.server_port
+                        and not parsed.username and not parsed.password)
+            except ValueError:
+                return False
+
         def _send_cors(self) -> None:
-            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Vary", "Origin")
+            origin = self.headers.get("Origin")
+            if origin and self._allowed_origin():
+                self.send_header("Access-Control-Allow-Origin", origin)
             self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
             self.send_header("Access-Control-Allow-Headers",
                              "Content-Type, Authorization")
@@ -101,6 +119,11 @@ def _make_handler(router: RotatingRouter) -> Type[BaseHTTPRequestHandler]:
 
         # ------------------------------------------------- OPTIONS
         def do_OPTIONS(self) -> None:  # noqa: N802
+            if not self._allowed_origin():
+                self.send_response(403)
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+                return
             self.send_response(204)
             self._send_cors()
             self.send_header("Content-Length", "0")
@@ -108,6 +131,9 @@ def _make_handler(router: RotatingRouter) -> Type[BaseHTTPRequestHandler]:
 
         # ------------------------------------------------- GET
         def do_GET(self) -> None:  # noqa: N802
+            if not self._allowed_origin():
+                self._send_json({"error": "origin not allowed"}, 403)
+                return
             path = self.path.split("?", 1)[0].rstrip("/") or "/"
 
             if path == "/":
@@ -136,6 +162,9 @@ def _make_handler(router: RotatingRouter) -> Type[BaseHTTPRequestHandler]:
 
         # ------------------------------------------------- POST
         def do_POST(self) -> None:  # noqa: N802
+            if not self._allowed_origin():
+                self._send_json({"error": "origin not allowed"}, 403)
+                return
             path = self.path.split("?", 1)[0].rstrip("/") or "/"
 
             if path != "/v1/chat/completions":
@@ -204,6 +233,12 @@ class RotorServer:
         self.handler = _make_handler(router)
 
     def serve(self, host: str = "127.0.0.1", port: int = 8000) -> None:
+        try:
+            loopback = ipaddress.ip_address(host).is_loopback
+        except ValueError:
+            loopback = host.lower() == "localhost"
+        if not loopback:
+            raise ValueError("Remote HTTP bind is disabled: configure an authenticated gateway first")
         httpd = ThreadingHTTPServer((host, port), self.handler)
         print(f"keyrotor v{VERSION} -> http://{host}:{port} "
               f"(dashboard: http://{host}:{port}/)")
