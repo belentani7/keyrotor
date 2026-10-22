@@ -58,7 +58,21 @@ def _make_handler(router: RotatingRouter) -> Type[BaseHTTPRequestHandler]:
         server_version = "Keyrotor/" + VERSION
 
         # ------------------------------------------------- CORS / plumbing
+        def _allowed_host(self) -> bool:
+            # A loopback bind alone does not protect against DNS rebinding.
+            # Validate Host before evaluating Origin, including Origin-less requests.
+            authority = self.headers.get("Host", "")
+            try:
+                parsed = urlsplit("http://" + authority)
+                return (parsed.hostname in {"localhost", "127.0.0.1", "::1"}
+                        and parsed.port == self.server.server_port
+                        and not parsed.username and not parsed.password)
+            except ValueError:
+                return False
+
         def _allowed_origin(self) -> bool:
+            if not self._allowed_host():
+                return False
             origin = self.headers.get("Origin")
             if not origin:
                 return True  # CLI/server-to-server requests have no Origin header
@@ -217,7 +231,7 @@ def _make_handler(router: RotatingRouter) -> Type[BaseHTTPRequestHandler]:
                 "choices": [{
                     "index": 0,
                     "message": {"role": "assistant",
-                                "content": result.content},
+                                "content": router.redactor.clean(result.content or "")},
                     "finish_reason": "stop",
                 }],
             })
