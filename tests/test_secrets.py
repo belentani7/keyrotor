@@ -86,3 +86,47 @@ def test_remote_bind_requires_a_real_authenticated_gateway():
     router = RotatingRouter(providers={}, keys={}, provider_order=[])
     with pytest.raises(ValueError, match="Remote HTTP bind"):
         RotorServer(router).serve(host="0.0.0.0", port=0)
+
+
+def test_rebinding_host_is_rejected_even_without_origin(local_server):
+    url = f"http://127.0.0.1:{local_server.server_port}/api/status"
+    request = Request(url, headers={
+        "Host": f"attacker.example:{local_server.server_port}",
+    })
+    with pytest.raises(HTTPError) as exc:
+        urlopen(request, timeout=3)
+    assert exc.value.code == 403
+    assert exc.value.headers.get("Access-Control-Allow-Origin") is None
+
+
+def test_completion_output_does_not_echo_provider_secrets():
+    from keyrotor.router import RouterResult
+
+    secret = "sk-or-v1-" + "a" * 24
+    router = RotatingRouter(providers={}, keys={}, provider_order=[])
+
+    def fake_chat(messages, **kwargs):
+        return RouterResult(ok=True, provider="test", model="test-model",
+                            content="secret marker: " + secret)
+
+    router.chat = fake_chat
+    server = ThreadingHTTPServer(("127.0.0.1", 0), _make_handler(router))
+    worker = threading.Thread(target=server.serve_forever, daemon=True)
+    worker.start()
+    try:
+        url = f"http://127.0.0.1:{server.server_port}/v1/chat/completions"
+        request = Request(
+            url,
+            data=json.dumps({"messages": [{"role": "user", "content": "hi"}]}).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urlopen(request, timeout=3) as response:
+            result = json.load(response)
+        content = result["choices"][0]["message"]["content"]
+        assert secret not in content
+        assert "****" in content
+    finally:
+        server.shutdown()
+        server.server_close()
+        worker.join(timeout=3)
