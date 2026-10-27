@@ -5,7 +5,6 @@ Validation never inspects or logs provider secrets or user message content.
 """
 from __future__ import annotations
 
-import math
 from typing import Any, Mapping, Optional
 
 _ROLES = frozenset(("system", "user", "assistant"))
@@ -16,7 +15,10 @@ def validate_chat_request(payload: Mapping[str, Any]) -> Optional[str]:
     if not isinstance(messages, list) or not 1 <= len(messages) <= 64:
         return "messages must contain 1 to 64 entries"
     for message in messages:
-        if not isinstance(message, dict) or message.get("role") not in _ROLES:
+        if not isinstance(message, dict):
+            return "invalid chat message role"
+        role = message.get("role")
+        if not isinstance(role, str) or role not in _ROLES:
             return "invalid chat message role"
         content = message.get("content")
         if not isinstance(content, str) or not content.strip() or len(content) > 8000:
@@ -37,8 +39,7 @@ def validate_chat_request(payload: Mapping[str, Any]) -> Optional[str]:
         if name not in payload:
             continue
         value = payload[name]
-        if (type(value) not in (int, float) or not math.isfinite(value) or
-                not low <= value <= high):
+        if type(value) not in (int, float) or not low <= value <= high:
             return name + " must be a finite value within provider limits"
     stop = payload.get("stop")
     if stop is not None:

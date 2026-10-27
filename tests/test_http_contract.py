@@ -74,9 +74,13 @@ def test_invalid_input_never_reaches_provider():
     with serve_local() as (router, port):
         for request in [
             {"messages": [{"role": "admin", "content": "hi"}]},
+            {"messages": [{"role": [], "content": "hi"}]},
+            {"messages": [{"role": {}, "content": "hi"}]},
             {"messages": [{"role": "user", "content": []}]},
             {"messages": [{"role": "user", "content": "hi"}], "max_tokens": 100000},
             {"messages": [{"role": "user", "content": "hi"}], "temperature": 25},
+            {"messages": [{"role": "user", "content": "hi"}], "temperature": 10 ** 400},
+            {"messages": [{"role": "user", "content": "hi"}], "top_p": 10 ** 400},
         ]:
             status, response = post(port, request)
             assert status == 400, response
