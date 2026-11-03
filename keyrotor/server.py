@@ -27,6 +27,7 @@ from urllib.parse import urlsplit
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, Dict, List, Optional, Tuple, Type
 
+from keyrotor.request_contract import validate_chat_request
 from keyrotor.providers import BUILTIN_PROVIDERS
 from keyrotor.router import RotatingRouter
 from keyrotor.secrets import load_keys, provider_order_from_env
@@ -34,7 +35,7 @@ from keyrotor.secrets import load_keys, provider_order_from_env
 VERSION = "1.0.0"
 
 # Request fields forwarded from the OpenAI-shaped body to the providers.
-_FORWARDABLE = ("temperature", "top_p", "max_tokens", "stream", "stop")
+_FORWARDABLE = ("temperature", "top_p", "max_tokens", "stop")
 
 _INDEX_HTML_CANDIDATES = [
     os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -117,7 +118,7 @@ def _make_handler(router: RotatingRouter) -> Type[BaseHTTPRequestHandler]:
                 length = int(self.headers.get("Content-Length", "0"))
             except ValueError:
                 return None, "invalid Content-Length"
-            if length <= 0 or length > 10 * 1024 * 1024:
+            if length <= 0 or length > 1024 * 1024:
                 return None, "empty or oversized body"
             try:
                 payload = json.loads(self.rfile.read(length).decode("utf-8"))
@@ -192,12 +193,13 @@ def _make_handler(router: RotatingRouter) -> Type[BaseHTTPRequestHandler]:
                                 400)
                 return
 
-            messages = body.get("messages")
-            if not isinstance(messages, list) or not messages:
-                self._send_json({"error": {"message": "messages required",
+            contract_error = validate_chat_request(body)
+            if contract_error:
+                self._send_json({"error": {"message": contract_error,
                                            "type": "invalid_request_error"}},
                                 400)
                 return
+            messages = body["messages"]
 
             model = body.get("model")
             # "auto"/empty: let each provider use its own default model, so

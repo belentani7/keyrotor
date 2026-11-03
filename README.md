@@ -126,6 +126,9 @@ Respuesta:
 
 En caso de fallo total devuelve `502` con `{"error": {...}}` (texto redactado).
 
+**Contrato seguro de chat (2026):** admite de 1 a 64 mensajes con rol `system`, `user` o `assistant`, contenido textual entre 1 y 8000 caracteres, `max_tokens` entre 1 y 8192 y un cuerpo JSON de máximo 1 MiB. La ruta devuelve una respuesta JSON ordinaria; `stream: true` o cualquier petición de streaming devuelve **HTTP 400** (no existe todavía un adaptador SSE). Las solicitudes inválidas se rechazan **antes** de consumir claves o hacer llamadas al proveedor. Los campos `temperature`, `top_p` y `stop` tienen límites explícitos. No se afirman capacidades de contenido multimodal no implementadas.
+
+
 ## Proveedores integrados
 
 | Nombre | Base URL | Auth | Modelo por defecto |
