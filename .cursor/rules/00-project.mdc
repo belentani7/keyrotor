@@ -1,0 +1,29 @@
+---
+description: Contexto, stack y convenciones base del proyecto
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Proyecto: belentani7__keyrotor
+
+Stack detectado: ci, pytest, python, tests.
+Gestores de paquetes: pyproject.
+Tests: pytest.
+
+## Protocolo
+
+1. Spec-first: PRD → SRS → Design Doc → ADR → Plan → tests GWT.
+2. Cambios pequeños, reversibles y con verificación real.
+3. Conventional commits: `type(scope): summary`.
+4. No commitear secretos ni credenciales.
+5. No ejecutar TypeScript sin compilar en producción.
+
+## Comandos
+
+- (sin scripts declarados; documenta aquí los comandos reales)
+
+## Verificación mínima
+
+- Tests del stack en verde.
+- Build reproducible.
+- `gitleaks detect --source . --redact` limpio.
