@@ -6,7 +6,8 @@ documentation until the operator explicitly exports its values to the process.
 from __future__ import annotations
 
 import os
-from typing import Dict, List, Mapping, Optional, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Dict, List, Optional
 
 # Canonical provider IDs correspond exactly to keyrotor.providers.BUILTIN_PROVIDERS.
 _KEY_VARS = {

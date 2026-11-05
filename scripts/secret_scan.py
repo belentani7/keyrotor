@@ -33,7 +33,7 @@ REPO_ROOT = Path(
 
 sys.path.insert(0, str(REPO_ROOT))
 
-from keyrotor.redact import find_secrets  # noqa: E402
+from keyrotor.redact import find_secrets
 
 SKIP_DIRS = {
     ".git",

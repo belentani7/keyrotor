@@ -7,7 +7,7 @@ policy and how to build its payload from an OpenAI-style request.
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Optional
 
 PayloadBuilder = Callable[[Dict[str, Any], str], Dict[str, Any]]

@@ -19,13 +19,13 @@ POST /v1/chat/completions  -> OpenAI-compatible chat
 
 from __future__ import annotations
 
+import ipaddress
 import json
 import os
 import uuid
-import ipaddress
-from urllib.parse import urlsplit
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from typing import Any, Dict, List, Optional, Tuple, Type
+from typing import Any, Dict, Optional, Tuple, Type
+from urllib.parse import urlsplit
 
 from keyrotor.providers import BUILTIN_PROVIDERS
 from keyrotor.router import RotatingRouter
@@ -132,7 +132,7 @@ def _make_handler(router: RotatingRouter) -> Type[BaseHTTPRequestHandler]:
             pass
 
         # ------------------------------------------------- OPTIONS
-        def do_OPTIONS(self) -> None:  # noqa: N802
+        def do_OPTIONS(self) -> None:
             if not self._allowed_origin():
                 self.send_response(403)
                 self.send_header("Content-Length", "0")
@@ -144,7 +144,7 @@ def _make_handler(router: RotatingRouter) -> Type[BaseHTTPRequestHandler]:
             self.end_headers()
 
         # ------------------------------------------------- GET
-        def do_GET(self) -> None:  # noqa: N802
+        def do_GET(self) -> None:
             if not self._allowed_origin():
                 self._send_json({"error": "origin not allowed"}, 403)
                 return
@@ -175,7 +175,7 @@ def _make_handler(router: RotatingRouter) -> Type[BaseHTTPRequestHandler]:
             self._send_json({"error": "not found"}, 404)
 
         # ------------------------------------------------- POST
-        def do_POST(self) -> None:  # noqa: N802
+        def do_POST(self) -> None:
             if not self._allowed_origin():
                 self._send_json({"error": "origin not allowed"}, 403)
                 return

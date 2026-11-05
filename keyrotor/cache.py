@@ -12,12 +12,12 @@ import json
 import threading
 import time
 from collections import OrderedDict
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional, Tuple
 
 
 class TTLCache:
     def __init__(self, maxsize: int = 1000) -> None:
-        self._store: "OrderedDict[str, Tuple[float, Any]]" = OrderedDict()
+        self._store: OrderedDict[str, Tuple[float, Any]] = OrderedDict()
         self._lock = threading.Lock()
         self._maxsize = maxsize
         self.hits = 0
