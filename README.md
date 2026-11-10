@@ -196,3 +196,7 @@ Ver [`open-data/README.md`](open-data/README.md) para fuente y licencia.
 ## Licencia
 
 MIT — Copyright (c) 2026 Pedro Belentani. Ver [LICENSE](LICENSE).
+
+
+## Producto
+Véase `plataforma/OFERTA.md`, `plataforma/precios.json`, `plataforma/ONEPAGER.md`.
