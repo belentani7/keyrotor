@@ -37,3 +37,7 @@ de redistribuirlos. El *codigo* que genera este pack es MIT, como el resto de
 
 ---
 *Fecha de generacion: ver `meta.generated_at` en `llm-models.json`.*
+
+
+## Producto
+Véase `plataforma/OFERTA.md`.

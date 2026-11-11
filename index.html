@@ -1,245 +1,600 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="keyrotor - Producto completo con hero shader y animaciones">
-  <title>Keyrotor</title>
-  <link rel="theme-color" content="#6366f1">
-  <style>/* Hero Shader */
-:root {
-  --primary: #6366f1;
-  --secondary: #818cf8;
-  --bg: #f8fafc;
-  --accent: #4f46e5;
-  --glow: 0 0 15px rgba(99, 102, 241, 0.3);
-}
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-body {
-  margin: 0;
-  padding: 0;
-  background: var(--bg);
-  color: #ffffff;
-  font-family: system-ui, -apple-system, sans-serif;
-  overflow-x: hidden;
-}
-.hero {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background: var(--bg);
-  overflow: hidden;
-}
-.hero-canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-}
-.hero-overlay {
-  position: relative;
-  z-index: 10;
-  text-align: center;
-  padding: 2rem;
-}
-.hero h1 {
-  font-size: clamp(2.5rem, 8vw, 5rem);
-  font-weight: 800;
-  margin-bottom: 1rem;
-  letter-spacing: -0.02em;
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.3));
-  animation: pulse 3s ease-in-out infinite;
-}
-.hero p {
-  font-size: clamp(1.1rem, 3vw, 1.5rem);
-  color: rgba(255,255,255,0.7);
-  margin-bottom: 2rem;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
-}
-.hero-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-.btn-primary {
-  background: var(--primary);
-  color: #ffffff;
-  padding: 0.8rem 1.6rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  text-decoration: none;
-  font-size: 1rem;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
-}
-.btn-primary:hover {
-  transform: translateY(-2px);
-  opacity: 0.9;
-  filter: brightness(1.1);
-}
-.btn-secondary {
-  background: transparent;
-  color: var(--primary);
-  padding: 0.8rem 1.6rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  text-decoration: none;
-  font-size: 1rem;
-  border: 2px solid var(--primary);
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-.btn-secondary:hover {
-  background: var(--primary);
-  color: #ffffff;
-}
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.05); }
-}
-@media (max-width: 768px) {
-  .hero h1 { font-size: 2rem; }
-  .hero p { font-size: 1rem; }
-  .hero-actions { flex-direction: column; align-items: center; }
-  .btn-primary, .btn-secondary { width: 100%; max-width: 250px; text-align: center; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .hero { animation: none; }
-  .hero h1 { animation: none; }
-}
-section {
-  padding: 4rem 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-section h2 {
-  font-size: 2rem;
-  margin-bottom: 1rem;
-  color: var(--primary);
-  text-align: center;
-}
-section p {
-  font-size: 1.1rem;
-  color: #64748b;
-  max-width: 700px;
-  margin: 0 auto 2rem;
-  text-align: center;
-}
-.stack-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  justify-content: center;
-  list-style: none;
-  padding: 0;
-}
-.stack-list li {
-  background: rgba(99, 102, 241, 0.1);
-  border: 1px solid rgba(99, 102, 241, 0.2);
-  border-radius: 2rem;
-  padding: 0.5rem 1rem;
-  font-size: 0.85rem;
-  color: #64748b;
-}
-footer {
-  padding: 3rem 2rem;
-  border-top: 1px solid rgba(128, 128, 128, 0.2);
-  text-align: center;
-  color: #64748b;
-  font-size: 0.9rem;
-}
-@media (max-width: 768px) {
-  .hero { min-height: 80vh; }
-  .hero h1 { font-size: 2rem; }
-  .hero p { font-size: 1rem; }
-  .hero-actions { flex-direction: column; align-items: center; }
-  .btn-primary, .btn-secondary { width: 100%; max-width: 250px; text-align: center; }
-  section { padding: 2rem 1rem; }
-}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>keyrotor — Router de rotación de claves LLM multi-proveedor, cero secretos</title>
+<meta name="description" content="Router de rotación de claves LLM multi-proveedor con failover, caché TTL y cortacircuitos. Cero secretos en git, logs ni UI. OpenRouter, NVIDIA NIM, Google AI Studio, OpenCode Zen.">
+<meta name="generator" content="repo-superpowers-audit-v1">
+<meta property="og:title" content="keyrotor — Router de rotación de claves LLM multi-proveedor, cero secretos">
+<meta property="og:description" content="Router de rotación de claves LLM multi-proveedor con failover, caché TTL y cortacircuitos. Cero secretos en git, logs ni UI. OpenRouter, NVIDIA NIM, Google AI Studio, OpenCode Zen.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0a09'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%238d6ad6'/%3E%3C/svg%3E">
+<style>
+:root{--bg:#0b0a09;--bg2:#131110;--ink:#f4efe7;--dim:#a89f92;--accent:#e0a35c;
+--accent2:#7fa88b;--line:rgba(244,239,231,.14);--serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+--sans:ui-sans-serif,"Segoe UI",Inter,system-ui,-apple-system,sans-serif;
+--mono:ui-monospace,"Cascadia Mono",Consolas,monospace;--measure:62ch;--radius:14px}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.65;
+-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:0 clamp(18px,4vw,40px);position:relative;z-index:1}
+a{color:var(--accent)}
+a:focus-visible,button:focus-visible{outline:3px solid var(--accent2);outline-offset:3px;border-radius:6px}
+.skip{position:absolute;left:-9999px;top:0;background:var(--accent);color:#12100e;padding:10px 16px;z-index:9}
+.skip:focus{left:12px;top:12px}
+header.site{border-bottom:1px solid var(--line);padding:22px 0;display:flex;gap:18px;
+align-items:baseline;justify-content:space-between;flex-wrap:wrap}
+.brand{font-family:var(--serif);font-size:1.05rem;letter-spacing:.01em}
+.brand span{color:var(--dim)}
+nav.site{display:flex;gap:18px;flex-wrap:wrap;font-family:var(--mono);font-size:.72rem;
+letter-spacing:.14em;text-transform:uppercase}
+nav.site a{color:var(--dim);text-decoration:none}
+nav.site a:hover,nav.site a[aria-current=page]{color:var(--ink)}
+main{padding:clamp(48px,9vh,104px) 0}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;
+color:var(--accent);margin:0 0 18px}
+h1{font-family:var(--serif);font-size:clamp(2.4rem,7vw,5.2rem);line-height:.95;
+letter-spacing:-.03em;margin:0 0 24px;font-weight:500;text-wrap:balance}
+h2{font-family:var(--serif);font-size:clamp(1.4rem,3vw,2.1rem);line-height:1.15;
+letter-spacing:-.02em;margin:64px 0 18px;font-weight:500}
+h3{font-size:1.02rem;margin:28px 0 10px;letter-spacing:-.01em}
+p,li{max-width:var(--measure);color:var(--ink)}
+.lead{font-size:clamp(1.05rem,2vw,1.28rem);color:var(--dim);max-width:56ch}
+hr{border:0;border-top:1px solid var(--line);margin:clamp(40px,8vh,80px) 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1px;
+background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin:32px 0}
+.cell{background:var(--bg2);padding:22px 20px}
+.cell h3{margin-top:0}
+.cell p{font-size:.9rem;color:var(--dim);margin:0}
+code,kbd{font-family:var(--mono);font-size:.86em;background:rgba(244,239,231,.07);
+padding:2px 6px;border-radius:5px}
+pre{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);
+padding:18px;overflow:auto;max-width:100%}
+pre code{background:none;padding:0}
+table{width:100%;border-collapse:collapse;margin:24px 0;font-size:.92rem}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.pill{display:inline-block;font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;
+text-transform:uppercase;border:1px solid var(--line);color:var(--dim);padding:3px 9px;border-radius:999px}
+footer.site{border-top:1px solid var(--line);padding:28px 0 44px;color:var(--dim);font-size:.8rem}
+.reveal{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s ease}
+.reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}
+.reveal{opacity:1;transform:none;transition:none}}
+::selection{background:var(--accent);color:#12100e}
+.webgl-canvas{width:100%;height:400px;background:var(--bg2);border:1px solid var(--line);
+border-radius:var(--radius);margin:24px 0;display:block}
+.superpowers-badge{display:inline-block;font-family:var(--mono);font-size:.65rem;
+letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--accent2);
+color:var(--accent2);padding:4px 10px;border-radius:999px;margin:10px 0}
 </style>
 </head>
 <body>
-  <section class="hero">
-    <div class="hero-canvas"></div>
-    <div class="hero-overlay">
-      <h1>Keyrotor</h1>
-      <p>Producto completo con home hero, shader WebGL animado, y stack moderno listo para producción.</p>
-      <div class="hero-actions">
-        <a href="#" class="btn-primary">Ver Características</a>
-        <a href="#stack" class="btn-secondary">Ver Stack</a>
+<a class="skip" href="#contenido">Saltar al contenido</a>
+<header class="site"><div class="wrap" style="display:flex;justify-content:space-between;align-items:baseline;gap:18px;flex-wrap:wrap">
+<div class="brand">keyrotor <span>· ecosistema Belentani · WebGL online</span></div>
+<nav class="site" aria-label="Navegación principal"><a href="index.html" aria-current="page">Inicio</a><a href="docs.html">Documentación</a><a href="accesibilidad.html">Accesibilidad</a><a href="privacidad.html">Privacidad</a><a href="404.html">404</a></nav>
+</div></header>
+<main id="contenido"><div class="wrap">
+<a class="skip" href="#contenido">Saltar al contenido</a>
+<header class="site"><div class="wrap" style="display:flex;justify-content:space-between;align-items:baseline;gap:18px;flex-wrap:wrap">
+<div class="brand">keyrotor <span>· ecosistema Belentani · WebGL online</span></div>
+<nav class="site" aria-label="Navegación principal"><a href="index.html" aria-current="page">Inicio</a><a href="docs.html">Documentación</a><a href="accesibilidad.html">Accesibilidad</a><a href="privacidad.html">Privacidad</a><a href="404.html">404</a></nav>
+</div></header>
+<main id="contenido"><div class="wrap">
+<a class="skip" href="#contenido">Saltar al contenido</a>
+<header class="site"><div class="wrap" style="display:flex;justify-content:space-between;align-items:baseline;gap:18px;flex-wrap:wrap">
+<div class="brand">keyrotor <span>· ecosistema Belentani · WebGL online</span></div>
+<nav class="site" aria-label="Navegación principal"><a href="index.html" aria-current="page">Inicio</a><a href="docs.html">Documentación</a><a href="accesibilidad.html">Accesibilidad</a><a href="privacidad.html">Privacidad</a><a href="404.html">404</a></nav>
+</div></header>
+<main id="contenido"><div class="wrap">
+<a class="skip" href="#contenido">Saltar al contenido</a>
+<header class="site"><div class="wrap" style="display:flex;justify-content:space-between;align-items:baseline;gap:18px;flex-wrap:wrap">
+<div class="brand">keyrotor <span>· ecosistema Belentani · WebGL online</span></div>
+<nav class="site" aria-label="Navegación principal"><a href="index.html" aria-current="page">Inicio</a><a href="docs.html">Documentación</a><a href="accesibilidad.html">Accesibilidad</a><a href="privacidad.html">Privacidad</a><a href="404.html">404</a></nav>
+</div></header>
+<main id="contenido"><div class="wrap">
+<a class="skip" href="#contenido">Saltar al contenido</a>
+<header class="site"><div class="wrap" style="display:flex;justify-content:space-between;align-items:baseline;gap:18px;flex-wrap:wrap">
+<div class="brand">keyrotor <span>· ecosistema Belentani · WebGL online</span></div>
+<nav class="site" aria-label="Navegación principal"><a href="index.html" aria-current="page">Inicio</a><a href="docs.html">Documentación</a><a href="accesibilidad.html">Accesibilidad</a><a href="privacidad.html">Privacidad</a><a href="404.html">404</a></nav>
+</div></header>
+<main id="contenido"><div class="wrap">
+<div data-ux-progress aria-hidden="true"></div>
+  <a class="ux-skip" href="#main">Saltar al contenido</a>
+
+  <header class="ux-nav">
+    <div class="ux-container ux-nav__inner">
+      <a class="ux-nav__brand" href="#top">
+        <span class="ux-nav__brand-dot" aria-hidden="true"></span> keyrotor
+      </a>
+      <nav aria-label="Principal">
+        <ul class="ux-nav__links">
+          <li><a href="#features">Características</a></li>
+          <li><a href="#stats">Estadísticas</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+      </nav>
+      <div class="ux-nav__actions">
+        <button class="ux-btn ux-btn--ghost" data-ux-theme-toggle type="button" aria-pressed="false">
+          <i data-lucide="moon" aria-hidden="true"></i><span class="sr-only">Tema</span>
+        </button>
+        <a class="ux-btn ux-btn--primary" data-ux-magnet  rel="noopener">
+          <svg class="icon-github" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.75 2.69 1.25 3.34.95.1-.74.4-1.25.72-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.7 5.38-5.26 5.66.41.36.77 1.05.77 2.13 0 1.54-.01 2.78-.01 3.16 0 .3.2.67.8.55A10.52 10.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg> GitHub
+        </a>
+        <button class="ux-menu-btn" data-ux-menu-btn type="button" aria-expanded="false" aria-controls="menu-movil" aria-label="Abrir menú">
+          <i data-lucide="menu" aria-hidden="true"></i>
+        </button>
       </div>
     </div>
-  </section>
-  <section id="stack">
-    <h2>Stack Tecnológico</h2>
-    <p>Tecnologías utilizadas en este repositorio.</p>
-    <ul class="stack-list">
-      <li>HTML5</li>
-      <li>CSS3</li>
-      <li>JavaScript</li>
-      <li>WebGL Shader</li>
-      <li>Responsive Design</li>
-    </ul>
-  </section>
-  <footer><p>© 2026 Keyrotor - Parte del ecosistema Belentani</p></footer>
-/* Hero Shader WebGL */
-(function() {
-  const canvas = document.createElement('canvas');
-  canvas.id = 'hero-canvas';
-  canvas.style.position = 'absolute';
-  canvas.style.top = '0';
-  canvas.style.left = '0';
-  canvas.style.width = '100%';
-  canvas.style.height = '100%';
-  canvas.style.zIndex = '1';
-  document.body.insertBefore(canvas, document.body.firstChild);
-  const gl = canvas.getContext('webgl');
-  if (!gl) return;
-  const vs = gl.createShader(gl.VERTEX_SHADER);
-  gl.shaderSource(vs, 'attribute vec2 position; void main() { gl_Position = vec4(position, 0.0, 1.0); }');
-  gl.compileShader(vs);
-  const fs = gl.createShader(gl.FRAGMENT_SHADER);
-  gl.shaderSource(fs, 'precision mediump float; uniform vec2 u_resolution; uniform float u_time; uniform vec2 u_mouse; float hash(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y * p.z); } float noise(vec2 p) { vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f); float a = hash(i); float b = hash(i + vec2(1.0, 0.0)); float c = hash(i + vec2(0.0, 1.0)); float d = hash(i + vec2(1.0, 1.0)); return mix(mix(a, b, f.x), mix(c, d, f.x), f.y); } float fbm(vec2 p) { float v = 0.0; float a = 0.5; vec2 shift = vec2(100.0); for (int i = 0; i < 5; ++i) { v += a * noise(p); p = p * 2.0 + shift; a *= 0.5; } return v; } void main() { vec2 uv = gl_FragCoord.xy / u_resolution.xy; uv.x *= u_resolution.x / u_resolution.y; vec2 m = uv - u_mouse; float n = fbm(uv * 3.0 + u_time * 0.5); n += fbm(uv * 6.0 - u_time * 0.3) * 0.5; n += length(m) * 0.1; n = mod(n, 1.0); vec3 color = mix(vec3(0.0, 0.5, 1.0), vec3(1.0, 0.0, 0.5), n); float vignette = 1.0 - length(uv * 2.0 - 1.0) * 0.4; color *= vignette; gl_FragColor = vec4(color, 1.0); }');
-  gl.compileShader(fs);
-  const program = gl.createProgram();
-  gl.attachShader(program, vs);
-  gl.attachShader(program, fs);
-  gl.linkProgram(program);
-  gl.useProgram(program);
-  const pb = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, pb);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]), gl.STATIC_DRAW);
-  const pl = gl.getAttribLocation(program, 'position');
-  gl.enableVertexAttribArray(pl);
-  gl.vertexAttribPointer(pl, 2, gl.FLOAT, false, 0, 0);
-  const rl = gl.getUniformLocation(program, 'u_resolution');
-  const tl = gl.getUniformLocation(program, 'u_time');
-  const ml = gl.getUniformLocation(program, 'u_mouse');
-  let mouse = {x: 0.5, y: 0.5};
-  window.addEventListener('mousemove', (e) => { mouse.x = e.clientX / window.innerWidth; mouse.y = 1.0 - e.clientY / window.innerHeight; });
-  function resize() { canvas.width = canvas.clientWidth * window.devicePixelRatio; canvas.height = canvas.clientHeight * window.devicePixelRatio; gl.viewport(0, 0, canvas.width, canvas.height); gl.uniform2f(rl, canvas.width, canvas.height); }
-  window.addEventListener('resize', resize);
-  resize();
-  function render(time) { gl.uniform1f(tl, time * 0.001); gl.uniform2f(ml, mouse.x, mouse.y); gl.drawArrays(gl.TRIANGLES, 0, 6); requestAnimationFrame(render); }
-  requestAnimationFrame(render);
+    <div data-ux-menu id="menu-movil">
+      <a href="#features">Características</a>
+      <a href="#stats">Estadísticas</a>
+      <a href="#faq">FAQ</a>
+      <a  rel="noopener">GitHub ↗</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ── HERO ─────────────────────────────────────────── -->
+    <section class="ux-hero" id="top" data-ux-hero>
+      <div class="ux-hero__canvas" aria-hidden="true"><canvas id="hero-canvas"></canvas></div>
+      <div class="ux-mesh" aria-hidden="true"></div>
+      <div class="ux-container">
+        <p class="ux-eyebrow" data-ux-hero-badge><i data-lucide="rotate-ccw" aria-hidden="true" style="width:14px;height:14px"></i> Router LLM · Python · MIT</p>
+        <h1 class="ux-hero__title" data-ux-hero-title>keyrotor<br><span class="ux-accent">Cero secretos, rotación infinita</span></h1>
+        <p class="ux-hero__sub" data-ux-hero-sub>
+          Router de rotación de claves LLM multi-proveedor con failover automático, caché TTL y cortacircuitos.
+          OpenRouter, NVIDIA NIM, Google AI Studio, OpenCode Zen — las claves solo viven en variables de entorno.
+        </p>
+        <div class="ux-hero__cta" data-ux-hero-cta>
+          <a class="ux-btn ux-btn--primary" data-ux-magnet  rel="noopener">
+            <i data-lucide="github" aria-hidden="true"></i> Ver en GitHub
+          </a>
+          <a class="ux-btn ux-btn--ghost"  rel="noopener">
+            <i data-lucide="external-link" aria-hidden="true"></i> Demo en vivo
+          </a>
+        </div>
+        <div class="ux-hero__meta" data-ux-hero-meta>
+          <span><i data-lucide="shield-check" aria-hidden="true"></i> Sin secretos en disco</span>
+          <span><i data-lucide="rotate-ccw" aria-hidden="true"></i> Rotación + failover</span>
+          <span><i data-lucide="database" aria-hidden="true"></i> Caché TTL + cortacircuitos</span>
+          <span><i data-lucide="code" aria-hidden="true"></i> Python · HTTP stdlib</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── TIRA DEL ECOSISTEMA ──────────────────────────── -->
+    <section class="strip" aria-label="Ecosistema">
+      <div class="ux-container strip__inner" data-ux-reveal>
+        <a  rel="noopener"><svg class="icon-github" aria-hidden="true"></svg> belentani7/keyrotor</a>
+        <a  rel="noopener"><i data-lucide="globe" aria-hidden="true"></i> keyrotor.vercel.app</a>
+        <a  rel="noopener"><svg class="icon-github" aria-hidden="true"></svg> belentani7 · GitHub</a>
+        <a  rel="noopener"><i data-lucide="globe" aria-hidden="true"></i> belentani.es</a>
+        <span><i data-lucide="git-branch" aria-hidden="true"></i> Ecosistema belentani7</span>
+      </div>
+    </section>
+
+    <!-- ── CARACTERÍSTICAS (BENTO) ──────────────────────── -->
+    <section class="ux-section" id="features">
+      <div class="ux-container">
+        <p class="ux-eyebrow" data-ux-reveal><i data-lucide="sparkles" aria-hidden="true" style="width:14px;height:14px"></i> Cómo funciona</p>
+        <h2 data-ux-reveal>Tres reglas,<br>cero secretos expuestos.</h2>
+        <p class="ux-lead" data-ux-reveal style="margin-bottom: var(--space-l);">
+          Arquitectura proxy local: el frontend habla solo con keyrotor; jamás ve una clave ni llama a proveedores directamente.
+        </p>
+        <div class="ux-grid ux-bento">
+          <article class="ux-card" data-ux-reveal>
+            <div class="ux-card__icon"><i data-lucide="shield" aria-hidden="true"></i></div>
+            <h3>NO SECRETS</h3>
+            <p>Ninguna clave real entra en git, logs, métricas ni UI. Todo texto pasa por el redactor antes de imprimirse: claves enmascaradas <code>sk-a****34</code>.</p>
+          </article>
+          <article class="ux-card" data-ux-reveal>
+            <div class="ux-card__icon"><i data-lucide="server" aria-hidden="true"></i></div>
+            <h3>Backend proxy</h3>
+            <p>El dashboard solo ve <code>GET /api/status</code> y <code>POST /v1/chat/completions</code>. Cero llamadas directas a OpenRouter, NVIDIA, Google u OpenCode desde el navegador.</p>
+          </article>
+          <article class="ux-card" data-ux-reveal>
+            <div class="ux-card__icon"><i data-lucide="rotate-ccw" aria-hidden="true"></i></div>
+            <h3>Rotación sin downtime</h3>
+            <p>Pool de claves primarias + fallback por proveedor. <code>401/403</code> descarta la clave y reintenta con la siguiente. Failover entre proveedores automático.</p>
+          </article>
+          <article class="ux-card" data-ux-reveal>
+            <div class="ux-card__icon"><i data-lucide="zap" aria-hidden="true"></i></div>
+            <h3>Retries + backoff</h3>
+            <p><code>429/408/5xx</code> reintentan con backoff exponencial + jitter sin descartar la clave. Errores de red tampoco descartan.</p>
+          </article>
+          <article class="ux-card" data-ux-reveal>
+            <div class="ux-card__icon"><i data-lucide="activity" aria-hidden="true"></i></div>
+            <h3>Cortacircuito</h3>
+            <p>5 fallos consecutivos abren el circuito 60 s; sonda half-open tras cooldown. Éxito cierra, fallo reabre.</p>
+          </article>
+          <article class="ux-card" data-ux-reveal>
+            <div class="ux-card__icon"><i data-lucide="database" aria-hidden="true"></i></div>
+            <h3>Caché TTL</h3>
+            <p>Hash exacto <code>SHA-256(proveedor + URL + body)</code> con TTL por proveedor (por defecto 300 s). Repetición idéntica = 0 tokens.</p>
+          </article>
+          <article class="ux-card" data-ux-reveal>
+            <div class="ux-card__icon"><i data-lucide="lock" aria-hidden="true"></i></div>
+            <h3>Local por defecto</h3>
+            <p>Binding solo en loopback (<code>127.0.0.1</code>, <code>::1</code>). CORS restringido: rechaza <code>Origin</code> cruzado. Para API pública hace falta auth, HTTPS, límites y gateway.</p>
+          </article>
+          <article class="ux-card" data-ux-reveal>
+            <div class="ux-card__icon"><i data-lucide="terminal" aria-hidden="true"></i></div>
+            <h3>CLI + Dashboard</h3>
+            <p><code>python -m keyrotor chat "hola"</code>, <code>python -m keyrotor status</code>. Dashboard en <code>http://127.0.0.1:8000/</code> con claves enmascaradas.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── PROVEEDORES INTEGRADOS ───────────────────────── -->
+    <section class="ux-section" style="background: var(--surface-2);">
+      <div class="ux-container">
+        <p class="ux-eyebrow" data-ux-reveal><i data-lucide="plug-zap" aria-hidden="true" style="width:14px;height:14px"></i> Proveedores integrados</p>
+        <h2 data-ux-reveal>Cuatro proveedores,<br>un solo endpoint.</h2>
+        <div class="ux-grid" style="margin-top: var(--space-l);">
+          <article class="ux-card" data-ux-reveal>
+            <div class="ux-card__icon"><i data-lucide="globe" aria-hidden="true"></i></div>
+            <h3>OpenRouter</h3>
+            <p><strong>Base:</strong> <code>openrouter.ai/api/v1</code><br><strong>Auth:</strong> Bearer<br><strong>Default:</strong> <code>meta-llama/llama-3.3-70b-instruct:free</code><br><strong>Env:</strong> <code>OPENROUTER_API_KEYS</code></p>
+          </article>
+          <article class="ux-card" data-ux-reveal>
+            <div class="ux-card__icon"><i data-lucide="cpu" aria-hidden="true"></i></div>
+            <h3>NVIDIA NIM</h3>
+            <p><strong>Base:</strong> <code>integrate.api.nvidia.com/v1</code><br><strong>Auth:</strong> Bearer<br><strong>Default:</strong> <code>meta/llama-3.1-8b-instruct</code><br><strong>Env:</strong> <code>NVIDIA_API_KEYS</code></p>
+          </article>
+          <article class="ux-card" data-ux-reveal>
+            <div class="ux-card__icon"><i data-lucide="sparkles" aria-hidden="true"></i></div>
+            <h3>Google AI Studio</h3>
+            <p><strong>Base:</strong> <code>generativelanguage.googleapis.com</code><br><strong>Auth:</strong> Query <code>key</code><br><strong>Default:</strong> <code>gemini-3.6-flash</code><br><strong>Env:</strong> <code>GOOGLE_API_KEYS</code></p>
+          </article>
+          <article class="ux-card" data-ux-reveal>
+            <div class="ux-card__icon"><i data-lucide="code" aria-hidden="true"></i></div>
+            <h3>OpenCode Zen</h3>
+            <p><strong>Base:</strong> <code>api.opencode.ai/v1</code><br><strong>Auth:</strong> Bearer<br><strong>Default:</strong> <code>gpt-4o-mini</code><br><strong>Env:</strong> <code>OPENCODE_API_KEYS</code></p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── STATS HONESTAS ───────────────────────────────── -->
+    <section class="ux-section" id="stats">
+      <div class="ux-container">
+        <p class="ux-eyebrow" data-ux-reveal><i data-lucide="bar-chart-2" aria-hidden="true" style="width:14px;height:14px"></i> Métricas reales</p>
+        <h2 data-ux-reveal>Código verificado,<br>sin marketing inflado.</h2>
+        <div class="ux-stats">
+          <div data-ux-reveal>
+            <div class="ux-stat__num" data-ux-count="4">4</div>
+            <div class="ux-stat__label">Proveedores integrados</div>
+          </div>
+          <div data-ux-reveal>
+            <div class="ux-stat__num" data-ux-count="11">11</div>
+            <div class="ux-stat__label">Variables de entorno configurables</div>
+          </div>
+          <div data-ux-reveal>
+            <div class="ux-stat__num" data-ux-count="300">300</div>
+            <div class="ux-stat__label">TTL caché por defecto (segundos)</div>
+          </div>
+          <div data-ux-reveal>
+            <div class="ux-stat__num" data-ux-count="5">5</div>
+            <div class="ux-stat__label">Umbral cortacircuito (fallos)</div>
+          </div>
+          <div data-ux-reveal>
+            <div class="ux-stat__num" data-ux-count="60">60</div>
+            <div class="ux-stat__label">Cooldown cortacircuito (segundos)</div>
+          </div>
+          <div data-ux-reveal>
+            <div class="ux-stat__num" data-ux-count="0">0</div>
+            <div class="ux-stat__label">Secretos en repo (garantizado)</div>
+          </div>
+        </div>
+        <p class="ux-lead text-center mx-auto" data-ux-reveal style="margin-top: var(--space-l); max-width: 70ch;">
+          Tests con transport falso (sin red) y claves de juguete <code>sk-fake-...</code>. CI ejecuta <code>secret_scan.py</code> en cada push.
+          <a  rel="noopener" style="margin-left:.5rem"><i data-lucide="external-link" aria-hidden="true" style="width:13px;height:13px"></i></a>
+        </p>
+      </div>
+    </section>
+
+    <!-- ── QUICKSTART ───────────────────────────────────── -->
+    <section class="ux-section" style="background: var(--surface-2);">
+      <div class="ux-container">
+        <p class="ux-eyebrow" data-ux-reveal><i data-lucide="rocket" aria-hidden="true" style="width:14px;height:14px"></i> Quickstart</p>
+        <h2 data-ux-reveal>De cero a chat<br>en tres comandos.</h2>
+        <div class="ux-grid" style="margin-top: var(--space-l);">
+          <article class="ux-card" data-ux-reveal>
+            <h3>1. Instalar</h3>
+            <pre style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-s);padding:var(--space-s);overflow:auto;margin:0"><code>pip install -e .</code></pre>
+          </article>
+          <article class="ux-card" data-ux-reveal>
+            <h3>2. Configurar claves</h3>
+            <pre style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-s);padding:var(--space-s);overflow:auto;margin:0"><code>copy .env.example .env
+$env:OPENROUTER_API_KEYS='tu-clave'
+# export OPENROUTER_API_KEYS='tu-clave'</code></pre>
+          </article>
+          <article class="ux-card" data-ux-reveal>
+            <h3>3. Arrancar + chatear</h3>
+            <pre style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-s);padding:var(--space-s);overflow:auto;margin:0"><code>python -m keyrotor serve
+python -m keyrotor chat "hola"</code></pre>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── FAQ ──────────────────────────────────────────── -->
+    <section class="ux-section" id="faq">
+      <div class="ux-container">
+        <p class="ux-eyebrow" data-ux-reveal><i data-lucide="circle-help" aria-hidden="true" style="width:14px;height:14px"></i> FAQ</p>
+        <h2 class="text-center mx-auto" data-ux-reveal>Preguntas frecuentes</h2>
+        <div class="ux-faq" style="margin-top: var(--space-l);">
+          <details data-ux-reveal>
+            <summary>¿Cómo cargo las claves si no uso .env?</summary>
+            <p>Las claves se leen <strong>exclusivamente desde variables de entorno</strong> del proceso. En Windows PowerShell: <code>$env:OPENROUTER_API_KEYS='sk-...'</code>. En Linux/macOS: <code>export OPENROUTER_API_KEYS='sk-...'</code>. El archivo <code>.env.example</code> es solo referencia local; no se carga automáticamente.</p>
+          </details>
+          <details data-ux-reveal>
+            <summary>¿Qué pasa si una clave devuelve 401/403?</summary>
+            <p>La clave se marca como <strong>muerta</strong>, se descarta del pool y se reintenta con la siguiente clave del <strong>mismo proveedor</strong>. Intentos ilimitados hasta agotar el pool de ese proveedor.</p>
+          </details>
+          <details data-ux-reveal>
+            <summary>¿Cómo funciona el failover entre proveedores?</summary>
+            <p>Si un proveedor se queda <strong>sin claves</strong>, tiene el <strong>circuito abierto</strong> o devuelve <strong>error 4xx</strong>, el router pasa automáticamente al siguiente del <code>KEYROTOR_PROVIDER_ORDER</code> (por defecto: <code>openrouter,nvidia,google,opencode</code>).</p>
+          </details>
+          <details data-ux-reveal>
+            <summary>¿Los errores 429/5xx descartan la clave?</summary>
+            <p><strong>No.</strong> <code>429</code> (rate limit), <code>408</code> (timeout) y <code>5xx</code> se reintentan con <strong>backoff exponencial + jitter</strong> sin descartar la clave. Errores de red tampoco descartan.</p>
+          </details>
+          <details data-ux-reveal>
+            <summary>¿Qué es el cortacircuito y cuándo salta?</summary>
+            <p>Tras <strong>5 fallos consecutivos</strong> (umbral configurable con <code>KEYROTOR_BREAKER_THRESHOLD</code>) se abre el circuito por <strong>60 s</strong> (<code>KEYROTOR_BREAKER_COOLDOWN</code>). Pasado el cooldown se envía una <strong>sonda half-open</strong>: éxito cierra el circuito, fallo lo reabre.</p>
+          </details>
+          <details data-ux-reveal>
+            <summary>¿La caché usa claves reales en el hash?</summary>
+            <p><strong>No.</strong> El hash es <code>SHA-256(proveedor + URL + body)</code> — <strong>sin claves</strong>. TTL por proveedor (por defecto 300 s con <code>KEYROTOR_CACHE_TTL</code>). Una repetición idéntica cuesta 0 tokens y no toca la red.</p>
+          </details>
+          <details data-ux-reveal>
+            <summary>¿Puedo exponer keyrotor en 0.0.0.0?</summary>
+            <p><strong>No por defecto.</strong> El servidor solo hace binding en loopback (<code>127.0.0.1</code>, <code>::1</code>). Para API pública es <strong>imprescindible</strong> diseñar antes: autenticación, autorización, HTTPS, límites de uso y un gateway. Esta versión no debe abrirse en <code>0.0.0.0</code>.</p>
+          </details>
+          <details data-ux-reveal>
+            <summary>¿Cómo verifico que no hay secretos en el repo?</summary>
+            <p>Ejecuta <code>python scripts/secret_scan.py</code> — recorre el repo buscando patrones de claves (OpenAI, OpenRouter, NVIDIA, Google, JWT, GitHub PAT, HF, AWS…). El CI lo ejecuta en cada push.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── CTA FINAL ────────────────────────────────────── -->
+    <section class="ux-section" id="empezar">
+      <div class="ux-container">
+        <div class="ux-cta-band" data-ux-reveal="zoom">
+          <h2>Instala keyrotor hoy<br>y olvida la gestión de claves.</h2>
+          <p class="ux-lead mx-auto" style="margin-bottom: var(--space-l);">
+            Router LLM multi-proveedor con rotación automática, failover, caché y cortacircuito.
+            Cero secretos en disco, cero secretos en UI. Python, HTTP stdlib, MIT.
+          </p>
+          <a class="ux-btn ux-btn--primary" data-ux-magnet  rel="noopener">
+            <i data-lucide="download" aria-hidden="true"></i> Empezar en GitHub
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="ux-footer">
+    <div class="ux-container ux-footer__inner">
+      <span>© <span data-ux-year>2026</span> keyrotor · MIT · Ecosistema belentani7</span>
+      <span style="display:inline-flex;gap:1.2rem;align-items:center">
+        <a  rel="noopener" style="display:inline-flex;align-items:center;gap:.35rem"><svg class="icon-github" aria-hidden="true"></svg>GitHub</a>
+        <a  rel="noopener">keyrotor.vercel.app</a>
+        <a  rel="noopener">belentani7</a>
+      </span>
+    </div>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Hero canvas shader (reusing existing hero.js logic)
+      const canvas = document.getElementById('hero-canvas');
+      if (canvas) {
+        const gl = canvas.getContext('webgl');
+        if (gl) {
+          const vs = gl.createShader(gl.VERTEX_SHADER);
+          gl.shaderSource(vs, 'attribute vec2 position; void main() { gl_Position = vec4(position, 0.0, 1.0); }');
+          gl.compileShader(vs);
+          const fs = gl.createShader(gl.FRAGMENT_SHADER);
+          gl.shaderSource(fs, 'precision mediump float; uniform vec2 u_resolution; uniform float u_time; uniform vec2 u_mouse; float hash(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y * p.z); } float noise(vec2 p) { vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f); float a = hash(i); float b = hash(i + vec2(1.0, 0.0)); float c = hash(i + vec2(0.0, 1.0)); float d = hash(i + vec2(1.0, 1.0)); return mix(mix(a, b, f.x), mix(c, d, f.x), f.y); } float fbm(vec2 p) { float v = 0.0; float a = 0.5; vec2 shift = vec2(100.0); for (int i = 0; i < 5; ++i) { v += a * noise(p); p = p * 2.0 + shift; a *= 0.5; } return v; } void main() { vec2 uv = gl_FragCoord.xy / u_resolution.xy; uv.x *= u_resolution.x / u_resolution.y; vec2 m = uv - u_mouse; float n = fbm(uv * 3.0 + u_time * 0.5); n += fbm(uv * 6.0 - u_time * 0.3) * 0.5; n += length(m) * 0.1; n = mod(n, 1.0); vec3 color = mix(vec3(0.0, 0.5, 1.0), vec3(1.0, 0.0, 0.5), n); float vignette = 1.0 - length(uv * 2.0 - 1.0) * 0.4; color *= vignette; gl_FragColor = vec4(color, 1.0); }');
+          gl.compileShader(fs);
+          const program = gl.createProgram();
+          gl.attachShader(program, vs);
+          gl.attachShader(program, fs);
+          gl.linkProgram(program);
+          gl.useProgram(program);
+          const pb = gl.createBuffer();
+          gl.bindBuffer(gl.ARRAY_BUFFER, pb);
+          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]), gl.STATIC_DRAW);
+          const pl = gl.getAttribLocation(program, 'position');
+          gl.enableVertexAttribArray(pl);
+          gl.vertexAttribPointer(pl, 2, gl.FLOAT, false, 0, 0);
+          const rl = gl.getUniformLocation(program, 'u_resolution');
+          const tl = gl.getUniformLocation(program, 'u_time');
+          const ml = gl.getUniformLocation(program, 'u_mouse');
+          let mouse = {x: 0.5, y: 0.5};
+          window.addEventListener('mousemove', (e) => { mouse.x = e.clientX / window.innerWidth; mouse.y = 1.0 - e.clientY / window.innerHeight; });
+          function resize() { canvas.width = canvas.clientWidth * window.devicePixelRatio; canvas.height = canvas.clientHeight * window.devicePixelRatio; gl.viewport(0, 0, canvas.width, canvas.height); gl.uniform2f(rl, canvas.width, canvas.height); }
+          window.addEventListener('resize', resize);
+          resize();
+          function render(time) { gl.uniform1f(tl, time * 0.001); gl.uniform2f(ml, mouse.x, mouse.y); gl.drawArrays(gl.TRIANGLES, 0, 6); requestAnimationFrame(render); }
+          requestAnimationFrame(render);
+        }
+      }
+    });
+  </script>
+<!-- belentani-ampliacion:start -->
+<a href="ampliacion.html" data-belentani-ampliacion="1" aria-label="Abrir la ampliación de keyrotor" style="position:fixed;right:16px;bottom:16px;z-index:2147483647;display:inline-flex;align-items:center;gap:.45rem;padding:.62rem .85rem;border-radius:999px;background:#0f172a;color:#f8fafc;font:600 13px/1.2 system-ui,-apple-system,Segoe UI,sans-serif;text-decoration:none;border:1px solid rgba(255,255,255,.18);box-shadow:0 8px 24px rgba(0,0,0,.28);white-space:nowrap;">Ampliación <span aria-hidden="true">&#8599;</span></a>
+<!-- belentani-ampliacion:end -->
+</div></main>
+<footer class="site"><div class="wrap">
+<p>keyrotor · WebGL listo para servir online · <a href="index.html">Inicio</a> · <a href="accesibilidad.html">Accesibilidad</a> · <a href="privacidad.html">Privacidad</a></p>
+</div></footer>
+<script>
+(function(){
+  var canvas = document.createElement('canvas');
+  canvas.className = 'webgl-canvas';
+  var container = document.getElementById('contenido');
+  if(container){ container.appendChild(canvas); }
+  try{
+    var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if(!gl){ canvas.innerHTML = '<p style="color:var(--dim);font-family:var(--mono);padding:12px">WebGL no disponible en este navegador.</p>'; return; }
+    gl.clearColor(0.047,0.043,0.039,1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    var vs = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vs, 'attribute vec2 p;void main(){gl_Position=vec4(p,0.0,1.0);}');
+    gl.compileShader(vs);
+    var fs = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fs, 'precision mediump float;uniform vec4 c;void main(){gl_FragColor=c;}');
+    gl.compileShader(fs);
+    var prog = gl.createProgram();
+    gl.attachShader(prog,vs); gl.attachShader(prog,fs); gl.linkProgram(prog);
+    gl.useProgram(prog);
+    var loc = gl.getUniformLocation(prog,'c');
+    gl.uniform4f(loc, 0.549, 0.659, 0.545, 1.0);
+    var buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+    var attr = gl.getAttribLocation(prog,'p');
+    gl.enableVertexAttribArray(attr);
+    gl.vertexAttribPointer(attr,2,gl.FLOAT,false,0,0);
+    gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+  }catch(e){ console.log('WebGL init:', e.message); }
 })();
+</script>
+</div></main>
+<footer class="site"><div class="wrap">
+<p>keyrotor · WebGL listo para servir online · <a href="index.html">Inicio</a> · <a href="accesibilidad.html">Accesibilidad</a> · <a href="privacidad.html">Privacidad</a></p>
+</div></footer>
+<script>
+(function(){
+  var canvas = document.createElement('canvas');
+  canvas.className = 'webgl-canvas';
+  var container = document.getElementById('contenido');
+  if(container){ container.appendChild(canvas); }
+  try{
+    var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if(!gl){ canvas.innerHTML = '<p style="color:var(--dim);font-family:var(--mono);padding:12px">WebGL no disponible en este navegador.</p>'; return; }
+    gl.clearColor(0.047,0.043,0.039,1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    var vs = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vs, 'attribute vec2 p;void main(){gl_Position=vec4(p,0.0,1.0);}');
+    gl.compileShader(vs);
+    var fs = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fs, 'precision mediump float;uniform vec4 c;void main(){gl_FragColor=c;}');
+    gl.compileShader(fs);
+    var prog = gl.createProgram();
+    gl.attachShader(prog,vs); gl.attachShader(prog,fs); gl.linkProgram(prog);
+    gl.useProgram(prog);
+    var loc = gl.getUniformLocation(prog,'c');
+    gl.uniform4f(loc, 0.549, 0.659, 0.545, 1.0);
+    var buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+    var attr = gl.getAttribLocation(prog,'p');
+    gl.enableVertexAttribArray(attr);
+    gl.vertexAttribPointer(attr,2,gl.FLOAT,false,0,0);
+    gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+  }catch(e){ console.log('WebGL init:', e.message); }
+})();
+</script>
+</div></main>
+<footer class="site"><div class="wrap">
+<p>keyrotor · WebGL listo para servir online · <a href="index.html">Inicio</a> · <a href="accesibilidad.html">Accesibilidad</a> · <a href="privacidad.html">Privacidad</a></p>
+</div></footer>
+<script>
+(function(){
+  var canvas = document.createElement('canvas');
+  canvas.className = 'webgl-canvas';
+  var container = document.getElementById('contenido');
+  if(container){ container.appendChild(canvas); }
+  try{
+    var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if(!gl){ canvas.innerHTML = '<p style="color:var(--dim);font-family:var(--mono);padding:12px">WebGL no disponible en este navegador.</p>'; return; }
+    gl.clearColor(0.047,0.043,0.039,1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    var vs = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vs, 'attribute vec2 p;void main(){gl_Position=vec4(p,0.0,1.0);}');
+    gl.compileShader(vs);
+    var fs = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fs, 'precision mediump float;uniform vec4 c;void main(){gl_FragColor=c;}');
+    gl.compileShader(fs);
+    var prog = gl.createProgram();
+    gl.attachShader(prog,vs); gl.attachShader(prog,fs); gl.linkProgram(prog);
+    gl.useProgram(prog);
+    var loc = gl.getUniformLocation(prog,'c');
+    gl.uniform4f(loc, 0.549, 0.659, 0.545, 1.0);
+    var buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+    var attr = gl.getAttribLocation(prog,'p');
+    gl.enableVertexAttribArray(attr);
+    gl.vertexAttribPointer(attr,2,gl.FLOAT,false,0,0);
+    gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+  }catch(e){ console.log('WebGL init:', e.message); }
+})();
+</script>
+</div></main>
+<footer class="site"><div class="wrap">
+<p>keyrotor · WebGL listo para servir online · <a href="index.html">Inicio</a> · <a href="accesibilidad.html">Accesibilidad</a> · <a href="privacidad.html">Privacidad</a></p>
+</div></footer>
+<script>
+(function(){
+  var canvas = document.createElement('canvas');
+  canvas.className = 'webgl-canvas';
+  var container = document.getElementById('contenido');
+  if(container){ container.appendChild(canvas); }
+  try{
+    var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if(!gl){ canvas.innerHTML = '<p style="color:var(--dim);font-family:var(--mono);padding:12px">WebGL no disponible en este navegador.</p>'; return; }
+    gl.clearColor(0.047,0.043,0.039,1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    var vs = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vs, 'attribute vec2 p;void main(){gl_Position=vec4(p,0.0,1.0);}');
+    gl.compileShader(vs);
+    var fs = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fs, 'precision mediump float;uniform vec4 c;void main(){gl_FragColor=c;}');
+    gl.compileShader(fs);
+    var prog = gl.createProgram();
+    gl.attachShader(prog,vs); gl.attachShader(prog,fs); gl.linkProgram(prog);
+    gl.useProgram(prog);
+    var loc = gl.getUniformLocation(prog,'c');
+    gl.uniform4f(loc, 0.549, 0.659, 0.545, 1.0);
+    var buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+    var attr = gl.getAttribLocation(prog,'p');
+    gl.enableVertexAttribArray(attr);
+    gl.vertexAttribPointer(attr,2,gl.FLOAT,false,0,0);
+    gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+  }catch(e){ console.log('WebGL init:', e.message); }
+})();
+</script>
+</div></main>
+<footer class="site"><div class="wrap">
+<p>keyrotor · WebGL listo para servir online · <a href="index.html">Inicio</a> · <a href="accesibilidad.html">Accesibilidad</a> · <a href="privacidad.html">Privacidad</a></p>
+</div></footer>
+<script>
+(function(){
+  var canvas = document.createElement('canvas');
+  canvas.className = 'webgl-canvas';
+  var container = document.getElementById('contenido');
+  if(container){ container.appendChild(canvas); }
+  try{
+    var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if(!gl){ canvas.innerHTML = '<p style="color:var(--dim);font-family:var(--mono);padding:12px">WebGL no disponible.</p>'; return; }
+    gl.clearColor(0.047,0.043,0.039,1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+  }catch(e){ console.log('WebGL:', e.message); }
+})();
+</script>
 </body>
 </html>
